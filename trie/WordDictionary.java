@@ -49,24 +49,33 @@ class WordDictionary {
         }
 
         private boolean dfsSearch(String word, Node node) {
-            Node current = node == null ? this._root : node;
             for (int i = 0; i < word.length(); i++) {
                 char c = word.charAt(i);
-                if (!current.children.containsKey(c)) {
+                if (!node.children.containsKey(c)) {
                     if (c == '.') {
-                        for (char cc : node.children.keySet()) {
-                            Node child = node.children.get(cc);
-                            if (this.dfsSearch(word.substring(i + 1), child)) {
-                                return true;
+                        // added edge case where the ending char is '.'
+                        if (word.length() == 1) {
+                            for (Node n : node.children.values()) {
+                                if (n.isWord) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        } else {
+                            for (char cc : node.children.keySet()) {
+                                Node child = node.children.get(cc);
+                                if (this.dfsSearch(word.substring(i + 1), child)) {
+                                    return true;
+                                }
                             }
                         }
                     }
                     return false;
                 } else {
-                    current = current.children.get(c);
+                    node = node.children.get(c);
                 }
             }
-            return current.isWord;
+            return node.isWord;
         }
 
     }
