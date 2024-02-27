@@ -85,6 +85,7 @@ class AutocompleteSystem {
                 result.add(sb.toString());
             }
 
+            // TODO: the logic below this and in the dfs function need fixed
             Stack<Map.Entry<Character, Node>> stack = new Stack<Map.Entry<Character, Node>>();
             for (Map.Entry<Character, Node> kvp : current.children.entrySet()) {
                 stack.push(kvp);
@@ -107,6 +108,34 @@ class AutocompleteSystem {
                 sb.setLength(sb.length() - 1);
             }
 
+            return result;
+
+        }
+
+        private void dfs(List<String> resultsSoFar, String prefix, Node current) {
+            Stack<Map.Entry<Character, Node>> stack = new Stack<Map.Entry<Character, Node>>();
+            for (Map.Entry<Character, Node> kvp : current.children.entrySet()) {
+                stack.push(kvp);
+            }
+
+            while (!stack.empty()) {
+                Map.Entry<Character, Node> entry = stack.pop();
+                sb.append(entry.getKey());
+
+                current = entry.getValue();
+
+                if (current.isSentence) {
+                    resultsSoFar.add(sb.toString());
+                }
+
+                for (Map.Entry<Character, Node> kvp : current.children.entrySet()) {
+                    stack.push(kvp);
+                }
+
+                sb.setLength(sb.length() - 1);
+            }
+
+            return resultsSoFar;
         }
 
     }
