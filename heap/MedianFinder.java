@@ -1,112 +1,145 @@
 import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
 
 class MedianFinder {
     public MedianFinder() {
-        this._array = new ArrayList<Integer>();
+        _minHeap = new Heap(false);
+        _maxHeap = new Heap(true);
     }
 
-    private ArrayList<Integer> _array;
+    private Heap _minHeap;
+    private Heap _maxHeap;
 
     public void addNum(int num) {
-        this._array.add(num);
+        _maxHeap.addNum(num);
+
+        _minHeap.addNum(_maxHeap.pop());
+
+        if (_maxHeap.size < _minHeap.size) {
+            _maxHeap.addNum(_minHeap.pop());
+        }
     }
 
-    // TODO: rewrite this to use a min and max heap right now it is too slow for
-    // really large arrays since the problem defines it as a stream constantly
-    // calling add
     public double findMedian() {
-        int n = this._array.size();
-        int lowerMedianIndex = (int) Math.floor((n + 1) / 2.0);
-        int lowerMedian = getIth(0, n - 1, lowerMedianIndex);
-
-        // is n odd
-        if ((n & 1) == 1) {
-            return (double) lowerMedian;
-        }
-
-        int upperMedianIndex = (int) Math.ceil((n + 1) / 2.0);
-        int upperMedian = getIth(0, n - 1, upperMedianIndex);
-        return (upperMedian + lowerMedian) / 2.0;
-
+        return _maxHeap.size > _minHeap.size ? _maxHeap.top() : ((double) _maxHeap.top() + _minHeap.top()) * 0.5;
     }
 
-    private int getIth(int startIndex, int endIndex, int targetIndex) {
-        if (startIndex == endIndex) {
-            return this._array.get(startIndex);
+    class Heap {
+        public ArrayList<Integer> array;
+        public int size;
+        public boolean isMaxHeap;
+
+        public Heap(boolean isMax) {
+            array = new ArrayList<Integer>();
+            size = 0;
+            isMaxHeap = isMax;
         }
 
-        int pivot = this.getPartition(startIndex, endIndex);
-        int k = pivot - startIndex;
-
-        if (targetIndex == k) {
-            return this._array.get(pivot);
-        } else if (targetIndex < k) {
-            return getIth(startIndex, pivot + 1, targetIndex);
+        private int parent(int index) {
+            return (index - 1) / 2;
         }
 
-        return getIth(pivot, endIndex, targetIndex - k);
-    }
+        private int left(int index) {
+            return 2 * index + 1;
+        }
 
-    private int getPartition(int startIndex, int endIndex) {
-        int pivotIndex = ThreadLocalRandom.current().nextInt(startIndex, endIndex + 1);
-        int temp = this._array.get(endIndex);
-        this._array.set(endIndex, this._array.get(pivotIndex));
-        this._array.set(pivotIndex, temp);
+        private int right(int index) {
+            return 2 * index + 2;
+        }
 
-        int pivot = this._array.get(endIndex);
-        int low = startIndex - 1;
+        public int top() {
+            return size == 0 ? 0 : array.get(0);
+        }
 
-        for (int idx = startIndex; idx < endIndex; idx++) {
-            if (this._array.get(idx) <= pivot) {
-                low = low + 1;
-                temp = this._array.get(low);
-                this._array.set(low, this._array.get(idx));
-                this._array.set(idx, temp);
+        public void addNum(int num) {
+            array.add(num);
+            int index = size;
+            size++;
 
+            while (index > 0) {
+                boolean shouldSwap = false;
+                int parentIndex = parent(index);
+                int current = array.get(index);
+                int parent = array.get(parentIndex);
+
+                if (isMaxHeap) {
+                    if (current > parent) {
+                        shouldSwap = true;
+                    }
+                } else {
+                    if (current < parent) {
+                        shouldSwap = true;
+                    }
+                }
+
+                if (!shouldSwap) {
+                    break;
+                }
+
+                array.set(parentIndex, current);
+                array.set(index, parent);
+                index = parentIndex;
             }
         }
-        temp = this._array.get(low + 1);
-        this._array.set(low + 1, this._array.get(endIndex));
-        this._array.set(endIndex, temp);
-        return low + 1;
-    }
-    /*
-     *
-     *
-     *
-     * Adding number 41
-     * MaxHeap lo: [41] // MaxHeap stores the largest value at the top (index 0)
-     * MinHeap hi: [] // MinHeap stores the smallest value at the top (index 0)
-     * Median is 41
-     * =======================
-     * Adding number 35
-     * MaxHeap lo: [35]
-     * MinHeap hi: [41]
-     * Median is 38
-     * =======================
-     * Adding number 62
-     * MaxHeap lo: [41, 35]
-     * MinHeap hi: [62]
-     * Median is 41
-     * =======================
-     * Adding number 4
-     * MaxHeap lo: [35, 4]
-     * MinHeap hi: [41, 62]
-     * Median is 38
-     * =======================
-     * Adding number 97
-     * MaxHeap lo: [41, 35, 4]
-     * MinHeap hi: [62, 97]
-     * Median is 41
-     * =======================
-     * Adding number 108
-     * MaxHeap lo: [41, 35, 4]
-     * MinHeap hi: [62, 97, 108]
-     * Median is 51.5
-     *
-     *
-     *
-     */
 
+        public int pop() {
+            if (size == 1) {
+                size--;
+                return array.remove(0);
+            }
+
+            int result = array.get(0);
+            array.set(0, array.remove(size - 1));
+            size--;
+
+            if (isMaxHeap) {
+                maxHeapify(0);
+            } else {
+                minHeapify(0);
+            }
+
+            return result;
+        }
+
+        private void maxHeapify(int index) {
+            int leftIndex = left(index);
+            int rightIndex = right(index);
+            int largest = index;
+
+            if (leftIndex < size && array.get(leftIndex) > array.get(index)) {
+                largest = leftIndex;
+            }
+
+            if (rightIndex < size && array.get(rightIndex) > array.get(largest)) {
+                largest = rightIndex;
+            }
+
+            if (largest != index) {
+                int temp = array.get(index);
+                array.set(index, array.get(largest));
+                array.set(largest, temp);
+                maxHeapify(largest);
+            }
+        }
+
+        private void minHeapify(int index) {
+            int leftIndex = left(index);
+            int rightIndex = right(index);
+            int smallest = index;
+
+            if (leftIndex < size && array.get(leftIndex) < array.get(index)) {
+                smallest = leftIndex;
+            }
+
+            if (rightIndex < size && array.get(rightIndex) < array.get(smallest)) {
+                smallest = rightIndex;
+            }
+
+            if (smallest != index) {
+                int temp = array.get(index);
+                array.set(index, array.get(smallest));
+                array.set(smallest, temp);
+                minHeapify(smallest);
+            }
+        }
+    }
 }
