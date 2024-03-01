@@ -1,43 +1,63 @@
-import java.util.concurrent.ThreadLocalRandom;
-
 class Solution {
     public int[] sortArray(int[] nums) {
+        if (nums == null || nums.length < 2) {
+            return nums;
+        }
         array = nums;
-        sort(0, array.length - 1);
+        mergeSort(0, nums.length - 1);
+        return array;
     }
 
     private int[] array;
 
-    private void sort(int startIndex, int endIndex) {
-        if (startIndex >= endIndex) {
-            return;
+    private void merge(int startLeft, int endLeft, int endRight) {
+        int nLeft = endLeft - startLeft + 1;
+        int nRight = endRight - endLeft;
+
+        int[] left = new int[nLeft];
+        int[] right = new int[nRight];
+
+        for (int i = 0; i < nLeft; i++) {
+            left[i] = array[startLeft + i];
+        }
+        for (int i = 0; i < nRight; i++) {
+            right[i] = array[endLeft + i + 1];
         }
 
-        int newPivot = partition(startIndex, endIndex);
+        int pLeft = 0;
+        int pRight = 0;
+        int pMain = startLeft;
 
-        sort(startIndex, newPivot - 1);
+        while (pLeft < nLeft && pRight < nRight) {
+            if (left[pLeft] <= right[pRight]) {
+                array[pMain] = left[pLeft];
+                pLeft++;
+            } else {
+                array[pMain] = right[pRight];
+                pRight++;
+            }
+            pMain++;
+        }
 
-        sort(newPivot + 1, endIndex);
+        while (pLeft < nLeft) {
+            array[pMain] = left[pLeft];
+            pMain++;
+            pLeft++;
+        }
+
+        while (pRight < nRight) {
+            array[pMain] = right[pRight];
+            pMain++;
+            pRight++;
+        }
     }
 
-    private int partition(int startIndex, int endIndex) {
-        int pivotIndex = ThreadLocalRandom.current().nextInt(startIndex, endIndex + 1);
-        int temp = array[endIndex];
-        array[endIndex] = array[pivotIndex];
-        array[pivotIndex] = temp;
-        int pivot = array[endIndex];
-        int low = startIndex - 1;
-        for (int i = startIndex; i < endIndex; i++) {
-            if (array[i] <= pivot) {
-                low = low + 1;
-                temp = array[low];
-                array[low] = array[i];
-                array[i] = temp;
-            }
+    private void mergeSort(int startIndex, int endIndex) {
+        if (startIndex < endIndex) {
+            int middleIndex = (startIndex + endIndex) / 2;
+            mergeSort(startIndex, middleIndex);
+            mergeSort(middleIndex + 1, endIndex);
+            merge(startIndex, middleIndex, endIndex);
         }
-        temp = array[low + 1];
-        array[low + 1] = array[endIndex];
-        array[endIndex] = temp;
-        return low + 1;
     }
 }
