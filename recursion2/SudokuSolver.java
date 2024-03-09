@@ -173,6 +173,7 @@ class Solution {
             int nextDigitBit = currentCellBitmap & -currentCellBitmap;
             currentCellBitmap &= ~nextDigitBit;
             workingGameBoard[square] = nextDigitBit;
+
             // claim this DIGIT is used in row/column/cube
             rowBitmaps[currentRow] &= ~nextDigitBit;
             colBitmaps[currentCol] &= ~nextDigitBit;
@@ -187,7 +188,10 @@ class Solution {
             cubeBitmaps[currentCube] |= nextDigitBit;
             workingGameBoard[square] = ALL_ZEROS;
         }
+
         swapSeq(priorityQueueIndex, nextSquareIndex);
+
+        // if you get here this is an invalid board
         return false;
     }
 
