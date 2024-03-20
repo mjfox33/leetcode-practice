@@ -16,18 +16,22 @@ class Solution {
 		worker.add(chars[left]);
 
 		while (left < n - 1) {
-			worker.add(chars[right]);
-
-			while (left < right && worker.contains(chars[right])) {
-				worker.remove(chars[left++]);
+			// while there is a new character add it
+			while (right < n && !worker.contains(chars[right])) {
+				worker.add(chars[right++]);
 			}
 
+			// update the size if needed
 			if (worker.size() > maxLength) {
 				maxLength = worker.size();
 			}
 
-			if (right < n - 2) {
-				right++;
+			if (right == n) {
+				break;
+			}
+
+			while (left < right && worker.contains(chars[right])) {
+				worker.remove(chars[left++]);
 			}
 
 		}
